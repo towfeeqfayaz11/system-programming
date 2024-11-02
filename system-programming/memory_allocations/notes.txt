@@ -80,5 +80,22 @@ NOTE: the only difference between malloc() and calloc is, in case of malloc it a
 
 
 ## free()
-   - 
+   - #include <stdlib.h>
+     void free(void *ptr); // pointer to previously dynamically allocated memory
+   - free() function is used to free the dynamically allocated memory from the heap. This needs to be called only
+     when memory is allocated using malloc() or calloc() or realloc()
+   - free() doesn't lower the program break, it adds the freed block of memory to a list of free blocks that can be used
+     by future calls to malloc()
+   - the block of memory being freed can be in the middle of the heap, rather than at the end of heap,
+     so that lowering the program break is not done during free().
 
+
+## alloca()
+   - #include <alloca.h>
+     void *alloca(size_t size); // need to pass number of bytes required and returns pointer to memory on stack
+   - returns pointer to allocated block of memory which is in stack virtual address
+   - like the funcitons in the malloc, alloca() allocates memory dynamically, but this memory is not allocated
+     from heap, alloca() obtains memory from the stack by increasing the size of the stack frame of current executing function
+   - after performing the required function, when the funciton returns, it will be deleted from stack frame, hence free()
+     is not required for alloca
+   - alloca should be only used when memory allocation is very small
