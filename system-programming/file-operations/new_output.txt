@@ -1,0 +1,2 @@
+This is example of O_APPEND:
+This is example of O_APPEND:

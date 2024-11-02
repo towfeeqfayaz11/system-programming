@@ -1,0 +1,131 @@
+# simplified build process of a c project
+  - several source code files written in project are converted to object file by compiler and assembler
+  - then linker takes this object file and the libraries(static/dynamic) and forms executable file ( like a.out / COFF / ELF)
+  - then loader load this executable on the memory and the executable runs as process
+
+
+# in linux, processes have a parent child relationship
+# a process is created by its parent process
+
+# in linux startuo sequence;
+  - process '0' is first process -> called swapper process
+  - swapper process inturn forks/creates init process
+  - process '1' is init process  -> int process plays an important role. 
+                                    It creates and monitors set of other processes.
+
+# init process becomes the parent of any orphan process
+# man init -> for manual page on init process
+
+# in linux, we can get the pid of the current process using getpid() system call. getpid() always returns the pid of the caller
+# similiar to getpid(), we can get the parent pid of the current process using getppid() systemcall
+
+# linux kernle limits process IDs to being less than or equal to 32767 (default on 32 bit system) and 4194304( default on 64 bit system)
+  - to check whether you system is 32 bit or 64 bit, use any of below
+    $ uname -m
+      aarch64
+    or
+    $ lscpu | grep "Architecture"
+      Architecture: aarch64
+    or
+    $ getconf LONG_BIT
+      64
+    $ file /bin/bash         // it ELF 64-bit, then 64 bit system
+      /bin/bash: ELF 64-bit LSB pie executable, ARM aarch64, version 1 (SYSV), dynamically linked, interpreter /lib/ld-linux-aarch64.so.1, BuildID[sha1]=19ba98e53c9310cb99d28448871dfb5434a164cf, for GNU/Linux 3.7.0, stripped
+
+# /proc/sys/kernel/pid_max contains 1 greater than actual max number of process allowed in system
+
+
+-------------
+## memory layout of a process
+# there are different segments of a process;
+  - text segment: the code resides here
+  - data segment: for data variable during compile time
+    - initialized data segment
+    - uninitialized data segment (BSS)
+  - stack segment: for local variables
+  - heap segment: for dynamic memory data
+  - command line arguments
+
+1) text segment / code segment:
+   - text segment contains the code of the program that is ran.
+   - this segment of memory cannot be written, so that the code is not altered by any pointers
+   - thus text segment is read only
+   - contains the compiled assembly code in text format
+
+2) data segment:
+   - had two parts; initialized data segment, uninitialized data segment (BSS)
+
+   # initialized data segment:
+     - contains golabl and static variable that are explicitly initialized with the value in code
+    
+   # uninitialized data segment(BSS):
+     - contains global and static variables that are not explicitly initialized in the code
+     - the system initializes all the values of this segment to '0'
+
+3) stack segment:
+   - it is a dynamically growing and shrinking segment containing local data's(stack frames) of functions.
+   - one stack fram is allocated for each function that are called
+   - a stack frame stores the functions local variables, function arguments
+
+4) heap segment:
+   - the heap is an area from which memory (for variables) can be dynamically allocated at run time
+   - memory allocation uses continuous set of meemory on heap for particular data block
+5) command line argument:
+   - this segment contains the command line arguments passed to program
+
+
+
+=> virtual address space of a process (we are discussing only 32 bit system for simplicity):
+
+
+-------------------------------- higher address
+                               |
+                               | (Kernel space (1 GB))
+                               |
+                               |
+-------------------------------- (below is user space (3GB))
+command line arguments         |  argc and argv
+-------------------------------|
+stack                          |
+  |(heap growth direction)     |
+ \|/                           |
+                               |  
+- - - - - - - - - - - - - - - -| (though stack can grow but it has a limit)
+                               |
+                               |
+                               |
+ /|\                           |
+  | (heap growth direction)    |
+  |                            |
+heap                           |
+-------------------------------|
+uninitialized data segment     |
+(BSS)                          |
+                               |
+initialzed data segment        |
+-------------------------------|
+code segment                   |
+-------------------------------|  lower address
+
+
+# each process has a its own memory space (4GB) on a 32 bit system
+
+# NOTE: the process virtual memory has a userspace and kernelspace, This memory region
+        is configurable, but is it usually 3gb for userspace and 1 gb for kernel space
+
+
+## memory management in linux (conept of virtual memory)
+# - swap memory on disk is divided into equal partitions are pages and memory of ram is
+    also divided into same equal sized partitions called frames
+  - thus size of page is equal to size of frame
+  - however number of pages in a system are significantly higher than number of frames
+  - virtual memory assigned to each process is also divided into similiar equal size
+    partions called pages(on page table which itself also resides on ram)
+
+
+  process  -- access --> virtual memory (divided into pages) --> reffers page table for lookup ----access--> ram 
+                                                                                               |
+                                                                                               |
+                                                                                               |---if misses, then page is loaded from swap to ram
+
+# page/frame size is generally 4kb but is configurable

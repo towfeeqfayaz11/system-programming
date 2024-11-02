@@ -1,0 +1,4 @@
+Hello World I am here to learn lseek and its working
+what about you, what are you here to learn?
+is it same or something new?
+New String appended after SEEK_END

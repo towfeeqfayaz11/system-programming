@@ -1,0 +1,18 @@
+
+## typedef in c
+----------------
+typedef in C is a keyword that allows you to create an alias for an existing data type.
+This can simplify complex data types, improve code readability, and provide more meaningful
+names for various types, especially when working with structures, pointers, or other complex types.
+
+The basic syntax for typedef is as follows:
+$ typedef existing_type new_type_name;
+
+e.g;
+typedef int Integer;
+
+typedef struct {
+    char name[50];
+    int age;
+} Person; // Creates an alias 'Person' for the struct
+

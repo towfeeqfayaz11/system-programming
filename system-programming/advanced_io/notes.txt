@@ -1,0 +1,94 @@
+# atomicity is a condition in which the code is written in such a way
+  that code cannot be run by other processes/threads at the same time
+  while it is being executed/running by first process/thread
+
+# Linux gaurantees that all system calls are executed atomically.
+  Meaning, kernel gaurantess that all of the steps in a system call
+  are completed as a single operation by cpu. Also, in linux the system calls
+  either pass or fail without any intermediate results, otherwise raise condition
+  could occur
+
+# Preemptive scheduling is a scheduling algorithm that allows the operating system to
+  interrupt a running process and switch to a higher priority process. This is a common
+  and complex algorithm used in real-time systems.
+  Preemptive scheduling involves: Prioritizing tasks, Taking the CPU away from a task,
+  Saving task contexts, and Determining which task runs next.
+
+  Pre-emptive scheduling is a CPU scheduling technique used in Linux (and other operating systems)
+  where the operating system allocates CPU time to processes in a way that ensures higher priority
+  or more time-sensitive tasks can interrupt or "pre-empt" lower-priority tasks. This allows the
+  system to respond quickly to tasks with immediate needs, leading to better system responsiveness
+  and multitasking efficiency.
+
+  How Pre-emptive Scheduling Works
+  Interrupts: In a pre-emptive scheduling system, the operating system relies on interrupts (signals
+  from the system's timer or from hardware) to control the amount of time a process runs on the CPU.
+  After a defined time slice (a small interval of time), an interrupt forces the CPU to stop executing
+  the current process.
+  
+  Priority-Based Selection: The operating system's scheduler then determines whether the currently
+  running process should continue or if another, higher-priority process should take over. This decision
+  is based on scheduling policies, process priorities, and the current workload.
+  
+  Context Switching: If a higher-priority process needs to run, the current process is paused, and a
+  context switch occurs. During a context switch, the system saves the current state (CPU registers,
+  program counter, etc.) of the paused process and loads the saved state of the new process, allowing
+  it to resume from where it left off.
+
+
+
+# Note: linux kernel post 2.6 is a pre-emptive scheduling. Before version of linux were non preemptive
+  system call scheduling, meaning when a process was running in kernel mode, it was not able for
+  scheduler to schedule other processes, untill the running process voluntarily release CPU, or
+  returns back to user mode.
+
+
+## file descriptor table, file table and inode table:
+
+# file descriptor table:
+  - every process spinned has its own file descriptor table
+  - this table holds all open file of that process and looks as below;
+    
+    Fd     |  Pointer to open file
+    ------------------------------
+    0      |
+    1      |
+    2      |
+           |
+
+
+# open file table:
+  - it is a system-wide table and not specific to a specific process
+  - the structre of an open file table looks as below;
+    
+    file offset   | file status flags             | pointer to inode table
+                  | (status used during open())   |
+    ----------------------------------------------------------------------
+                  |                               |
+                  |                               |
+                  |                               |
+                  |                               |    
+
+
+# file descriptor table pointer to open file table and open file table points to inode table
+
+
+# inode table;
+  - is also a system wide table
+  - whenever a file is created, there is an entry in the inode table
+  - inode table is a colleciton of data structures (fields)
+  - the fields of inode table are;
+    File Type (e.g regular, FIFO, PIPE)
+    UID
+    GID
+    file size
+    time: time when file was created/modified
+    address of first 12 disk blocks
+    single indirection
+    double indirection
+    triple indirection
+
+# Note: 4k is the default block size in linux (however it can be changed as well).
+        when system uses or allocates memory, it is done in terms of blocks
+    
+# we can use `stat <file name>` or `stat -f <file name>` command on a file to get its details

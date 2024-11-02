@@ -1,0 +1,147 @@
+# some of core kernel functions
+  - file operations
+  - memory management
+  - virtual memory management
+  - process management
+  - thread management
+  - interprocess communications
+  - device management
+  - network management
+
+
+# kernel runs on top of hardware and manages the resources
+
+       Applications
+            |
+            |
+          kernel
+   --------------------
+  |         |         |
+ cpu     memory     devices
+
+
+# the C standard library is called libc. It is a collection of precomplied code.
+  The C Standard Library is a collection of predefined functions and macros that
+  come with the C programming language. These functions help perform common tasks
+
+
+# system calls: a systemcall can be considered as an interface through which the user
+  application code enters kernel mode.(Sometimes when we use a standard library function,
+  it can also inturn use a systemcall internally to do the work)
+
+# NOTE: the system calls can be invoked from user application in 2 ways;
+  1) directly calling the system call
+  2) the user code calls the library function, and this inturn calls system calls if
+     required (example printf is a library fuction, which internally calls write system call)
+
+# Here are some examples of common system calls used by applications:
+  File Management:
+    open(), read(), write(), close()
+    Example: Opening a file or writing data to a file.
+  Process Management:
+    fork(), exec(), wait(), exit()
+    Example: Creating a new process, executing a program, or terminating a process.
+  Memory Management:
+    mmap(), brk()
+    Example: Allocating or freeing memory for a program.
+  Device Management:
+    ioctl(), read(), write()
+    Example: Interacting with devices like disk drives or printers.
+  Networking:
+    socket(), bind(), connect(), send(), recv()
+    Example: Creating a network connection or sending/receiving data over a network.
+
+# NOTE: every system call has a unique number associated with it and the system
+  recognizes the system call by its unique number
+
+
+## working of a system call;
+   e.g; write() system call
+   1) when we use the write() syscall in our usercode, we are actually calling the
+      wrapper function in LIBC/GLIBC system library, so the arguments are passed to this
+      wrapper function.
+   2) the wrapper fuction raises an interrupt and the interrupt is specific to hardware
+      which is being used and as soon as the interrupt raises, the execution switches
+      from user space to kernel space and also the specifi arguments are carried to
+      kernel stack. Before switching the mode,the wrapper function writes the system call
+      number onto a specific cpu register.
+   3) Once the control switches for program from user mode to kernel mode, it enters the
+      trap handler and it begins to execute the code present in trap handler.
+   4) In the trap handler, the trap handler looks for system call number which has raised
+      the interrupt and from there it calls the specific system call definition where
+      action is being taken.
+   5) if needed, the result is returned to user code via same path.
+
+# NOTE: only instructions executing in kernel mode can acces both user space and kernel
+        space memory.
+
+
+## linux manual pages
+# Manual pages are divided into sections based on the type of information
+  they provide. Some commonly used sections are:
+
+General commands (Section 1): User commands like ls, cd, cp. (default for man is 1)
+Example: man 1 ls will show you the manual for the ls command.
+
+
+System calls (Section 2): Low-level system calls like open(), read(), write().
+Example: man 2 open will show you the manual for the open() system call.
+
+Library functions (Section 3): C library functions like printf(), malloc().
+Example: man 3 printf will show you the manual for the printf() function.
+
+Special files (Section 4): Device files in /dev.
+Example: man 4 tty shows you the manual for terminal special files.
+
+File formats and conventions (Section 5): Information about file formats like /etc/passwd, /etc/fstab.
+Example: man 5 passwd shows you the format of the /etc/passwd file.
+
+Games (Section 6): Documentation for games available in the system (rarely used).
+
+Miscellaneous (Section 7): Macros and conventions.
+
+Example: man 7 signal shows information about signal handling conventions.
+System administration commands (Section 8): Commands for system administrators like ifconfig, iptables.
+Example: man 8 ifconfig shows the manual for the ifconfig command.
+
+Kernel routines (Section 9): Documentation on kernel internal functions (used mainly by developers).
+
+## some commonly used standard libraries
+
+# unistd.h
+Some important functions in unistd.h include:
+
+1. File Operations
+read(): Reads data from a file descriptor into a buffer.
+write(): Writes data from a buffer to a file descriptor.
+close(): Closes a file descriptor, freeing up the resource.
+lseek(): Repositions the file offset of a file descriptor (seek operation).
+
+2. Process Management
+fork(): Creates a new process by duplicating the current process.
+exec() family: Replaces the current process image with a new process image. Examples include execl(), execp(), etc.
+getpid(): Returns the process ID of the calling process.
+getppid(): Returns the parent process ID of the calling process.
+
+3. Standard I/O File Descriptors
+STDIN_FILENO, STDOUT_FILENO, STDERR_FILENO: Constants representing standard input, output, and error file descriptors (values 0, 1, and 2).
+
+4. Sleep and Delay
+sleep(): Suspends the calling process for a specified number of seconds.
+usleep(): Suspends execution for a specified number of microseconds.
+
+5. File Control
+access(): Checks the accessibility of a file (e.g., read, write, execute permissions).
+unlink(): Deletes a name from the filesystem (used to remove files).
+chdir(): Changes the working directory of the calling process.
+getcwd(): Gets the current working directory.
+
+6. Pipes
+pipe(): Creates a unidirectional data channel (pipe) that can be used for interprocess communication.
+
+
+
+NOTE: to know which system calls our program is using and calling under the hood, we can use `strace <executable>` to see the system call trace
+
+NOTE: you can find all the library header avilable for a program using
+$ gcc -H <my_program.c>

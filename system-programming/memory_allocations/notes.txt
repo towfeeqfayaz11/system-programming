@@ -1,0 +1,84 @@
+// memory allocation functions;
+
+malloc()
+calloc()
+realloc()
+alloca()  // stack level memory allocation
+brk() 
+sbrk()
+free()
+
+# NOTE: brk() and sbrk() are system call for memory allocaton which are
+        used in implementation of library fucntions malloc(), calloc(), realloc()
+
+
+# a process can allocate dynamic memory by increasing the size of the heap, memory allocated
+  is continuous virtual memory thay begins after the uninitialized data segment of a process
+  in virtual memory map. It grows and shrinks as memory is allocated and freed.
+
+# the current limit of the heap is reffered to as 'program break'
+# when dynamic memeory is allocated, 'program break' increases
+# after the program break is increased, the process may access any address in the newly allocated area
+
+
+brk()
+ - #include <unistd.h>
+   int brk(void *mem_loc)
+ - brk() on success, sets 'program break' to new memory location specified in argument to brk()
+ - on success rerurns 0, on failure returns -1
+ - so basicallyu we are passing the new memory loation to set the 'program break' to
+
+sbrk()
+ - #include <unistd.h>
+   void *sbrk(intptr_t increment)
+ - sbrk() on success returns 'program break' which is a virtual memory location
+ - returns -1 on failure and 'errno' is set to ENOMEM(out of memory)
+ - intptr_t is integer datatype
+ - we pass the offset to be added to current 'program break' and return the updated 'program break'
+
+
+
+- in general, c programs use the malloc family of functions to allocate and deallocate memory on the heap
+- these functions are built over brk() and sbrk()
+
+ ## malloc()
+    #include <stdlib.h>
+    void *malloc(size_t size);
+    - returns pointer to allocated memory on success, or NULL on error
+
+
+## calloc()
+    - the calloc() function allocates memory for an array of identical items
+    #include <stdlib.h>
+    void *calloc(size_t numitems, size_t size);
+    - numitems is the count of item, and size is the size of each item
+    - returns pointer to allocated memory on success or NULL on error
+
+
+NOTE: the only difference between malloc() and calloc is, in case of malloc it allocates memory
+      but doesn't assig any value to the allocated memory. whereas in calloc the allocated memory is
+      filled with zero.
+
+# when a process terminatees, by default the memory of a process is freed.
+  By good practice when the memory is utilized, it must be explicitly freed by programer
+
+
+
+## realloc()
+    #include <stdlib.h>
+    void *realloc(vodi *ptr, size_t size);
+    - realloc is used to resize the memory previously alocated using malloc or calloc
+
+    void *realloc(void *ptr, size_t size);
+    - returns pointer to allocated memory on success, or NULL on error
+    - when we are increasing the size of the block of memory, realloc() attempts to form a single block
+    - if the block lies at the end of the heap, then realloc() expands the heap
+    - if the block of the memory lies i hte middle of the heap, and there is insufficient free space
+      immediately following it, realloc() allocates a new block of memory and copies all existing data from the old block to the new block
+    - care must be taken in above case as the old memory location and newly allocated memory location may not both be same,
+      hence storing memory address before realloc() and later using same memory after realloc for memory access may give wrong results
+
+
+## free()
+   - 
+

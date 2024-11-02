@@ -1,0 +1,93 @@
+Note: max colum size in file should 100 to 105 characters
+
+
+### Steps in the compilation of a c program source code
+1) Preprocessing:
+Actions:
+- The preprocessor handles directives that begin with #, like #include and #define.
+- Include Files: When the preprocessor sees #include <stdio.h>, it replaces this line with the
+  actual contents of the stdio.h file, which contains declarations for input/output functions.
+- Macros: If there were any #define statements, it would replace those with the defined values.
+
+Output:
+- The preprocessed file is a text file with all #include and #define handled, which is still in C
+  language.
+
+
+2) Compilation:
+Actions:
+- The compiler translates the preprocessed C code into assembly language, which is a low-level
+  language closer to machine code but still human-readable.
+- Syntax and Semantic Analysis: The compiler checks for syntax errors (e.g., missing semicolons)
+  and semantic errors (e.g., using undeclared variables).
+- Code Generation: Converts C code into assembly instructions for the target machine.
+
+Output:
+- An assembly language file (usually with a .s extension).
+
+
+3) Assembly
+Actions:
+- The assembler takes the assembly code and translates it into machine code (binary code), which
+  the computer's processor can understand.
+- Instruction Conversion: Each assembly instruction is converted into a specific binary code that
+  represents an operation in the processor.
+- Object File Creation: The machine code is stored in an object file (with a .o or .obj extension).
+
+Output:
+- An object file, which contains machine code and is not yet executable because it might have
+  unresolved references to functions or variables.
+
+
+4) Linking
+Actions:
+- The linker combines the object file(s) with other necessary object files and libraries to produce
+  a final executable program.
+- Symbol Resolution: Resolves references to functions and variables that were declared but not
+  defined in the original object file. This includes linking standard library functions like printf.
+- Address Binding: Assigns final memory addresses to various code and data sections.
+- Executable Creation: Produces a single executable file that can be run on the target machine.
+
+Output:
+- An executable file (commonly named a.out by default on Unix-like systems).
+
+
+
+## Putting it All Together: When you compile your C program using gcc, these steps are automatically
+   performed behind the scenes.
+   - Preprocessing: #include <stdio.h> is replaced with the content of stdio.h.
+   - Compilation: The code is translated into assembly language.
+   - Assembly: The assembly code is converted into machine code, producing an object file.
+   - Linking: The object file is combined with other necessary libraries (like the C standard
+     library) to produce the final executable.
+   - By running gcc first.c, you trigger this whole process, and the resulting a.out executable
+     file can be run to display "Hello World!".
+
+
+# if you want to see the instruction written in executable file like a.out you can use below commands
+$ objdump -d a.out
+
+NOTE:
+- When you include #include <stdio.h> or any standard library header like <stdlib.h>, <math.h>, etc.,
+  your compiler knows where to find these header files
+- The compiler is configured with default paths where it looks for standard library header files.
+  These paths typically include system directories where standard library headers are installed.
+- to see information about the search paths gcc uses to find header file, use below commands
+  $ gcc -v -E -x c /dev/null
+  This command tells GCC to perform the preprocessing step (-E) for an empty C file (/dev/null) and
+  print verbose information (-v). 
+- The compiler and linker use predefined search paths to locate the necessary library files and object
+  files that contain the definitions of functions declared in header files.
+
+
+========================================================================================================
+
+## static library vs dynamic library
+
+# static library
+  Windows (.lib extention) Library
+  Linux   (.a extention) Archive
+
+# dynamic library
+  Windows (.dll extention) Dynamic Link Library
+  Linux   (.so extention) Shared Object
