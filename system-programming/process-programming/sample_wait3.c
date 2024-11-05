@@ -32,11 +32,11 @@ int main(){
         }
 
         printf("parent executing before wait(),\nparent pid is (%d)\n", getpid());
-        ret_pid = waitpid(cpid2, &status, 0);
+        ret_pid = waitpid(cpid2, &status, 0); // note this is a blocking wait call
         printf("cpid returned is (%d)\n", ret_pid);
         printf("status is (%d)\n", status);
 
-        ret_pid = waitpid(cpid, &status, 0);
+        ret_pid = waitpid(cpid, &status, 0); // note this is a blocking wait call
         printf("cpid returned is (%d)\n", ret_pid);
         printf("status is (%d)\n", status);
 
@@ -46,3 +46,11 @@ int main(){
     return 0;
 
 }
+
+/*
+using waitpid(), parent process has a control one which child process to wait on, unlike wait() where parent doesn't have
+control on whcih child process to wait on rather the child process which completes first returns.
+
+Thus wait() and waitpid() gives process synchronization between the parent and child process.
+Process synchronization is a method in which we can control the process, so that they don't give the result, whhich is not acceptable
+*/
