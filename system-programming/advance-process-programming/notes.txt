@@ -1,0 +1,31 @@
+# execve() - for running new program
+  - execve() systemcall loads a new program into a process's memory, during this operation,
+    the old program is discarded, and its virtual memory is replaced by new program's virtual memory
+  - the process's stack, data, and heap are replaced by those of the new program
+  - the new program starts its execution from main() function
+
+  #include <unistd.h>
+  int execve(const char *pathname, char *const argv[], char *const envp[]);
+  - never returns on success, returns -1 on error
+  - reffer to man 2 execve
+
+  NOTE:
+  const char *pathname = "hello";  // Correct
+  pathname = "world";             // Allowed, pointer can point to different memory
+  *pathname = 'H';                // Error! Cannot modify the char at pathname
+
+  char *const pathname = "hello"; // Correct
+  pathname = "world";             // Error! Cannot change the pointer itself
+  *pathname = 'H';                // Allowed, can modify the char at pathname
+
+
+## exec() family library function (not syscalls, but built on syscal execve())
+- execl()
+- execlp()
+- execle()
+- execv()
+- execvp()
+- execvpe()
+
+# none of the above returns on success, all return -1 on error
+NOTE: execve() is a system call, whereas exec's show in this section are library function built over execve()
