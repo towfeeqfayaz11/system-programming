@@ -29,3 +29,38 @@
 
 # none of the above returns on success, all return -1 on error
 NOTE: execve() is a system call, whereas exec's show in this section are library function built over execve()
+
+
+-------
+## process table and file descriptor between parent and child
+## file sharing between parent and child process
+
+# when a fork() is performed, the child receives duplicates of all the parent's file descriptors.
+  This means that corresponding file descriptors in the parent and the child refer to the same file description
+
+# The open file description contains the current file offset(as modified by read(), write() and lseek())
+
+# As a result these attributes of an open file are shared between the parent and child
+
+
+process table (system wide): in proces table each pid has a reference to process control block
+
+pid | PCB(process control block)
+----------
+    |
+    |
+    |
+
+# each process has its own process control block and looks as below
+# PCB(process control block) is a data structure with many data members, few of them are
+------------------
+program counter  |
+CPU registers    |
+process state    |
+flags            |
+process priority |
+.                |
+.                |
+.                |
+------------------
+# NOTE: the struct `task_struct` represents process control block in linux
