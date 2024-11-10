@@ -1,0 +1,18 @@
+## Signals
+# signals are software interrupts that provide a mechanism for handling asynchronpis events
+# These events can originate from outside the system, such as when the user generates the
+  interupt character by presenting ctrl+c or from activites within the system
+# In linux, there are different signals and have a unique numbers, by which they are identified
+# signals have a very precise lifecycle. First, a signal is raised, The kernel then stores the signal until it is able
+  to deliver it. Finally the signals are delivered to corresponding processs.
+
+# The kernel can perform one of three actions, depending on what the process asked it to do
+  - "ignore the signal" : no action is taken
+     There are two signals that cannot be ignored; SIGKILL and SIGSTOP
+  - "Catch and handle the signal": the kernel will suspend execution of the process's current code path
+    and jump to previously registered function. The process will then execute this function once the process
+    returns from this function, it will jump back to whenever it was when it caught the singal
+  - "Perform the default action": This action depends on the signal being sent.The default acion is often
+    to terminate the process
+
+# Every signal will have its default behaviour incase the process has not handled it
