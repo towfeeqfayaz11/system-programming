@@ -1,5 +1,5 @@
 ## Signals
-# signals are software interrupts that provide a mechanism for handling asynchronpis events
+# signals are software interrupts that provide a mechanism for handling asynchronous events
 # These events can originate from outside the system, such as when the user generates the
   interupt character by presenting ctrl+c or from activites within the system
 # In linux, there are different signals and have a unique numbers, by which they are identified
@@ -16,3 +16,47 @@
     to terminate the process
 
 # Every signal will have its default behaviour incase the process has not handled it
+
+## signal identifiers
+# every signal has a symbolic name that starts with the prefix 'SIG'. For example, SIGINT is the signal sent when the user processes ctr+can
+# SIGKILL is the signal sent when a process is forcefully terminated
+# These signals are all defined in a header file included from <signal.h>
+
+# NOTE: every signal has a default action 
+
+## some common signals;
+# SIGABRT: the abort() function sends this signal to the process that invokes it. The process then terminates and generated a core dump file
+# SIGALRM: the alarm() and setitimer() funtions send this signal to the process that invoked them when an alarm expires
+# SIGBUS: (bus error) this signal is raised when a process has a memory access error
+# SIGCHLD: whenever a process terminates or stops, the kernel sends this signal to the process's parent
+# SIGCONT: the kernel sends this signal to a process when the process needs to be resumed which is in a stopped state
+# SIGFPE: this signal represents any arithmetic exception
+# SIGILL: the kernel sends this signal when a process attempts to execute an illegal machine instruction
+# SIGINT: this is a interrupt signal. This occurs when users presses ctrl+c from keyboard
+# SIGKILL: this signal is sent from the kill() system call.
+# SIGPIPE: if a process writes to a pipe but the reader has terminated, the kernel raises this signal
+# SIGSEGV: this signal, whose name derives from segmentation violation, is sent to a process when it attempts an invalid memory access
+# SIGUSR1 and SIGUSR2: these signals are available for user-defined purposes, the kernel never raises them. Only user can generate these signal from usermode
+
+
+"
+A core dump file is a file that captures the memory content and state of a process at a specific moment, 
+typically when the process crashes or terminates unexpectedly. It is used for debugging purposes to diagnose the cause of the crash.
+
+Key Features of a Core Dump File
+Memory Snapshot:
+
+It contains a snapshot of the process's memory (heap, stack, and data segments) at the time of the crash.
+Helps developers analyze variable values, memory usage, and pointers.
+Process State:
+
+Captures the state of the CPU registers, including the instruction pointer (where the program crashed).
+Includes other metadata like thread information and system state.
+Triggered by Errors:
+
+Core dumps are usually created when a program encounters a fatal error, such as segmentation faults (SIGSEGV), illegal instructions, or division by zero.
+Debugging Aid:
+
+Developers use tools like gdb (GNU Debugger) to analyze core dump files.
+By examining the dump, they can determine the source of the issue and fix bugs in the program.
+"
