@@ -145,3 +145,54 @@ NOTE: to know which system calls our program is using and calling under the hood
 
 NOTE: you can find all the library header avilable for a program using
 $ gcc -H <my_program.c>
+
+
+================
+# string initalized using pointer can be reinitalized, but if initalized using array variable, cannot be reinitalized
+
+char *canBeReinitalized = "Hello World";
+canBeReinitalized = "Hello Man";                 // allowd
+
+char canNotBeReinitalized[] = "Hello World";  
+canNotBeReinitalized = "Hello Boy";              // not allowd (will give error)
+
+=================
+
+# file handling in C
+
+# a file is c is handled using `FILE` type pointer;
+
+FILE *fptr;
+
+//opening file
+fptr = fopen("myfile.txt", "r"); //fopen("filename", mode);
+/*
+modes:
+"r"  - open to read                   // will return null pointer if file doesn't exist
+"rb" - open to read in binary
+"w"  - open to write                  // will create file if it doesn't exist
+"wb" - open to write in binary        // will create file if it doesn't exist
+"a"  - open to append                 // will create file if it doesn't exist
+*/
+
+
+//closing file
+fclose(fptr);
+
+============
+## memory allocation in C
+
+# malloc()  :- memory allocation
+            => takes number to be allocated and returns a pointer of type void
+            => int *ptr = (int*) malloc(5*sizeof(int));  // will reserver 20 bytes of memory (5 * 4)
+
+# calloc()  :- continuous memory allocation
+            => by default, intalized all values with zero
+            => int *ptr  = (int*) calloc(5, sizeof(int));
+
+# free()    :- free memory which was allocated previously
+            => free(ptr);
+
+# realloc() :- reallocate memory (increase/decrease) memory using same pointer
+            => int *ptr = (int*) calloc(5, sizeof(int));
+            => ptr = realloc(ptr, 7);
