@@ -16,3 +16,43 @@ typedef struct {
     int age;
 } Person; // Creates an alias 'Person' for the struct
 
+
+-------------------
+## Pointers in C
+
+# C Constant Pointer vs Pointer to Constant
+
+# constant pointer
+  => A pointer is said to be a constant pointer when the address that is pointing to, cannot be changed
+    
+    # In example below, the pointer ptr initially points to ch and later to c, hence it is not a constant pointer
+    ```C
+    char ch, c;
+    char *ptr = &ch;
+    ptr = &c;
+    ```
+
+    # how to create and use a constant pointer (below will give error at compile time)
+    ```C
+    char ch = 'c';
+    char c = 'a';
+    char *const ptr = &ch; // A constant pointer
+    ptr = &c;              // Trying to assign new address to a constant pointer. WRONG!!!
+    ```
+
+# pointer to constant
+  => this type of pointer cannot change the value at the address pointed by it.
+
+    # in below example (when not using pointer to constant, we can successfully update value pointed by pointer)
+    ```C
+    char ch = 'c';
+    char *ptr = &ch;
+    *ptr = 'a';
+    ```
+
+    # here is a pointer to constant example (will fail while compile time)
+    ```C
+    char ch = 'c';
+    const char *ptr = &ch; // A constant pointer 'ptr' pointing to 'ch'
+    *ptr = 'a';// WRONG!!! Cannot change the value at address pointed by 'ptr'.
+    ```

@@ -60,3 +60,31 @@ Debugging Aid:
 Developers use tools like gdb (GNU Debugger) to analyze core dump files.
 By examining the dump, they can determine the source of the issue and fix bugs in the program.
 "
+
+
+========================
+
+What Are SIGUSR1 and SIGUSR2?
+Definition:
+
+SIGUSR1 and SIGUSR2 are two user-defined signals provided by Unix/Linux systems.
+They are not assigned a predefined behavior (like SIGINT or SIGTERM), so you can use them for custom inter-process communication.
+Purpose:
+
+These signals are meant for user-defined actions in your programs.
+For example, you can use them to notify a parent process about some event in the child process (like a custom handshake or status update).
+Why Use Them?
+
+They give flexibility to send signals between processes without overriding system-defined signals like SIGTERM.
+They allow processes to "talk" to each other in a structured way.
+Why Use kill() to Send Signals?
+The kill() function allows one process to send a signal to another process. It's not just for "killing" processes (despite the name). Here’s how it works:
+
+kill() Syntax:
+$ kill(pid, signal_number);
+
+pid: The process ID to which you want to send the signal.
+signal_number: The signal you want to send (e.g., SIGUSR1, SIGUSR2).
+
+NOTE: kill <pid> ~= kill -15 <pid>   // cli based kill
+      kill(pid, signal_number)       // code based kill
