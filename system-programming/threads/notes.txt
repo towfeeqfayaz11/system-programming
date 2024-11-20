@@ -1,0 +1,21 @@
+# process with threads
+
+-----------------------------
+stack segment (main thread)  |
+- - - - - - - - - - - - - - -
+stack segment (thread2)      |
+- - - - - - - - - - - - - - -
+stack segment (thread1)      |
+- - - - - - - - - - - - - - -
+heap segment                 |
+- - - - - - - - - - - - - - -
+data segment                 |
+- - - - - - - - - - - - - - -
+code segment                 |
+------------------------------
+
+# threads share the memory within a process but have 
+  dedicated stack area per thread, and the main thread
+  itself also has its own stack
+
+# so threads can communicate/share data by reading and writing to data segment or heap segment
