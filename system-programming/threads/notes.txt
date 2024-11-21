@@ -19,3 +19,40 @@ code segment                 |
   itself also has its own stack
 
 # so threads can communicate/share data by reading and writing to data segment or heap segment
+# threads are basic unit of cpu utilization
+
+=============================================================================
+## flow from processor to software threads
+
+processor chip
+    |
+   \|/
+one or more physical cores
+    |
+   \|/
+physical core is hardware execution unit 
+ => a single physical core can behave as multiple virtual cores [also called hardware 
+    threads, given it supports Multithreading (SMT), or Hyper-Threading (HT)]
+ => if physical core doesn't support SMT or HT, then one core will be as one core only
+    |
+   \|/
+   Software threads
+ => OS creates process(process itself is a main thread and can have 0 or more other threads),
+    all these threads at OS level are called software threads
+ => OS takes care of mapping software threads to cores (or virtual_cores / hardware threads
+    in case SMT or HT is supported in processor)
+ 
+ NOTE:
+    => With SMT/HT, there is a one-to-one mapping between software threads and hardware
+       threads (not necessarily physical cores).
+    => Without SMT/HT, the mapping is one-to-one between software threads and physical cores.
+
+
+
+NOTE:
+  => cpu register is unique to each core
+  => l1 cache is also unique to each core
+  => l2 cache os also unique to each core
+  => l3 cache is common to all cores across a processor
+
+===========================================================================================
