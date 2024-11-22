@@ -56,3 +56,57 @@ NOTE:
   => l3 cache is common to all cores across a processor
 
 ===========================================================================================
+NOTE: regarding pointers, process/program can directly access code segmet, data segment and stack, but it cannot directly access heap.
+      heap is considered exteranl to program or outside the program. So to access heap (external to program) pointers are needed.
+      Pointers are not only used to access the heap memory but also used to access any resource (file on disk, keyboard, monitor,
+      network/internet ) which is external/outside to porgram.
+
+      So one major usage of pointer is accessing the resources which are outside the program
+
+## creating threads in c;
+# each thread created in linux has a unique thread id
+
+# we use library <pthread.h> (posix threads)
+# important functions;
+  -> pthread_create(&tid, NULL, threadSafe, NULL); // to create a thread, sets thread id in `tid`
+     => returns 0 on success
+
+  -> pthread_join(tid, void **retval); // waits for created threads to join back main thread
+     :- pthread_join() function when called from main thread, waits for the specified thread to terminate.
+     :- if that thread has already terminated, pthread_join() returns immediately
+     :- returns 0 on success
+     :- the task that pthread_join performs for threads is similiar to that performed by waitpid() for processes
+     :- the main usecase of using pthread_join is that the main thread should wait for all the threads it has created,
+        and then only should terminate itself in the end
+
+  -> pthread_exit(void *retval) function terminates the calling thread, and specifies a return value,
+     this value can be obtained in main thread by calling pthread_join()
+     :- the retval argument specifies the return value for the thread
+
+     :- if the main thread calls pthread_exit() instead of calling exit() or return(), then the other threads continue to execute
+
+# a thread can get its own thread id using `pthread_t pthread_self(self);`
+
+NOTE: the process id for main threads and other threads will be same
+
+---------------------
+# detaching a thread
+  :- by default, a thread is joinable, this means that when it terminates, another thread can obtain its return value using pthread_join()
+  :- if a joinable thread is not joined by calling pthread_join(), then the terminated thread becomes a zombie thread, consuming system resource
+  :- pthread_detach(): if using this, the system automatically cleans up terminated thread, no need of calling pthread_join
+
+  #include <pthread.h>
+  int pthread_detach(pthread_t thread);
+  > returns 0 on success or a positive error number on error
+
+# cancel/terminate a specified thread
+  #include <pthread.h>
+  int pthread_cancel(pthread_t thread)
+  > returns 0 on success or a positive error number on error
+  > used to cancel/terminate a specified thread
+
+
+#NOTE: threads are also called lightweight processes
+       # threads share virtual memory of process in which they are created
+       # communication between processes is done using inter process commuication while incase of threads it is simple
+         and can be sone using shared memory
