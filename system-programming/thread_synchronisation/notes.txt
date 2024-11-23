@@ -1,0 +1,117 @@
+# thread synchronization
+  :- mutex (mutual exclusion)
+  :- condition variables
+
+# one of the main advantages of threads are that they can share information through global variables (data segment, heap segment)
+# programmer has to take care that multi-threads do not attempt to modify/read the same global variable at the same time.
+# "critical section" is used to refer to the section of code that accesses a shared resource and whose execution
+  shuld be atomic, else synchronisation issues arise
+# It means that the shared resources have to be used in protected manner, to overcome synchronisation issues, we will discuss
+  different methods to overcome synchronisation issues
+
+-------
+## mutex
+# mutex is a type of lock (its data type is pthread_mutex_t)
+# to avoid the problems that can occur when multiple threads try to access/modify a shared variable,
+  we must use a mutex (short for mutual exclusion)
+# more generally, mutexes can be used to ensure atomic access to any shared resource
+# a mutex has two states: locked and unlocked
+# at any moment, at most one thread may hold the lock on a mutex, and hence only that thread can execute the critical section
+# when a thread locks a mutex, it becomes the owner of that mutex, only the mutex owner can unlock the mutex
+
+# steps of mutex operation:
+  - lock the mutex for the shared resource
+  - access the shared resource, perform operations on shared resource as required
+  - unlock the mutex
+
+## mutex allocation
+   => a mutex can either be allocated as a static variable or be created dynamically at run time
+
+   => to created a statically allocated mutex:
+      pthread_mutex_t mtx = PTHREAD_MUTEX_INITIALIZER;
+      => syntax
+      #include <pthread.h>
+      int pthread_mutex_lock(pthread_mutex_t *mutex);
+      int pthread_mutex_unlock(pthread_mutex_t *mutex);
+
+      > both return 0 on success or a positive error number on error
+
+
+## deadlock
+# sometimes a thread needs to simultaneously access two or more different shared resources,
+  each of which is governed by a seperate mutex
+# dead lock can be also be caused if a thread has already locked a mutex, and same thread is trying to lock same mutex again
+
+                Thread A             Thread B
+                   |                     |
+                   |                     |
+                   |                     |
+              mutex_lock_A           mutex_lock_B
+                   |                     |
+                   |                     |
+                   |                     |
+(blocks here) mutex_lock_B           mutex_lock_A   (blocks here)
+
+## how to avoid deadlocks
+# the simplest way to avoid such deadlocks is to define a mutex hierarchy
+# if threads need to lock the same set of mutexes, they should always lock them in the same order
+# for example, in above scenerio, the deadlock could be avoided if the two threads always lock the mutexes in the
+  order mutex_lock_A followed by mutex_lock_B
+
+                Thread A             Thread B
+                   |                     |
+                   |                     |
+                   |                     |
+     (waits)   mutex_lock_A           mutex_lock_A (got lock)
+                   |                     |
+                   |                     |
+                   |                     |
+              mutex_lock_B            mutex_lock_B  (got lock)
+
+
+## variations of int pthread_mutex_lock(pthread_mutex_t *mutex);
+# the pthreads API provides two variants of the pthread_mutex_lock() function;
+  #1 pthread_mutex_trylock()
+  #2 pthread_mutex_timedlock()
+
+# pthread_mutex_trylock() function is the same as pthread_mutex_lock(), except that if the mutex is currently locked,
+  then it does not block rather pthread_mutex_trylock() fails, returning the error EBUSY
+
+# pthread_mutex_timedlock() function is the same as pthread_mutex_lock(), except that the caller can specify an additional
+  argument, abstime, that places a limit on the time that the thread will sleep while waiting to acquire the mutex.
+  If the time interval specified by its abstime argument expires without the caller becoming the owner of the mutex,
+  pthread_mutex_timedlock() returns the error ETIMEDOUT
+
+-----------------------
+## signaling changes of state: condition variables
+# A condition variable allows signalling from one thread to other thread, about changes in the state of a shared variable
+# condition variables help to define the sequence of thread execution, e.g; Incase of producer and consumer application,
+  producer thread runs, and then the producer thread signals the consumer thread for further execution
+# in condition variable, the thread waiting for shared resource will be made to sleep and as soon as it gets signal from
+  other thread, the thread wakes up and executes (like accessing/modifying shared resource)
+# a condition variable is always used in conjunction with a mutex
+
+# condition variables can be allocated statically or dynamically
+# e.g; for statically allocated condition variable
+pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
+
+## signalling and wait on condition variables
+# the principal of condition variable is 'signal and wait'
+# the 'signal' operation is a notifiction to one or more waiting threads that a shared variable's state has changed
+# the 'wait' operation is the method of blocking until such a notifiction is received from other thread
+
+# syntax:
+# the pthread_cond_signal() function signals the condition variable specified by cond.
+# the pthread_cond_wait() function blocks thread until the condition variable cond is signaled
+
+#include <pthread.h>
+int pthread_cond_signal(pthread_cond_t *cond);
+int pthread_cond_wait(pthread_cond_t *cond, pthread_mutex_t *mutex);
+#both return 0 on success or positive error number on error
+
+## working principle of condition variable
+   pthread_cond_wait(pthead_cond_t *cond, pthead_mutex_t *M)
+# step1: the thread calling pthread_cond_wait unlocks Mutex - M
+# step2: blocks on the condition variable 'cond' to receive the signal from other thread
+# step3: as soon as it receives required signal, it further locks Mutex - M
+NOTE: step 1 and step 2 are executed as atomic operation
