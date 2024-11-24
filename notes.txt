@@ -1,4 +1,4 @@
-Note: max colum size in file should 100 to 105 characters
+Note: max column size in file should 100 to 105 characters
 
 
 ### Steps in the compilation of a c program source code
