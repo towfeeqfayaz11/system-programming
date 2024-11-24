@@ -1,0 +1,91 @@
+## Shared memory: portion of memory of RAM mapped to processes on virual memory but is not exclusive to any process, rather
+                  mapped to multiple processes. Which is unlike virtual memory of process (which is exclusive to a process)
+
+   process 1                Physical RAM           process2
+virtual memory                                  virtual Memory
+(4GB)                                                  (4GB)
+-------------------------------------------------------------------------------------   
+|      |                   |      |                |      |                              
+|mm-p1 |--------|          |      |                |      |                               
+|      |        |          |      |                |      |                              
+|      |         \         |      |      |---------|mm-p2 |
+|      |         |         |      |      |         |      |
+|      |         |------   |  SM  | -----          |      |
+|      |                   |      |                |      |
+
+mm-p1 : mapped memory on p1
+mm-p2 : mapped memory on p2
+SM: created shared memory on physical RAM, which is accssible to poth processes
+
+
+
+
+step1: created shared memory on physical RAM (initially created shared memory is of 0 bytes)
+step2: define size of shared memory
+step3: map shared memory on individual processes
+
+==================
+
+## posix- shared memory
+# posix shared memory allows to share a mapped memory region between unrelated processes
+# shared memory entries are present in '/dev/shm'
+# shared memory is the fastest IPC mechanism, as no extra kernel data structure is involved
+# In other IPC, if data needs to be sent from say process 1 to process 2, then data from
+  process 1 user space to kernel space needs to be copied, then again from kernel space to user space of process 2 need to
+  be performed
+
+# to use a posix shared memory object, we perform two steps:
+    step1:
+        - use the shm_open() function to open an object with a specified name.
+        - the shm_open() function is analogous to the open() system calling
+        - It either creates a new shared memory object or opens an existing one
+        - shm_open() returns a file descriptor reffering to the share memory
+        NOTE: the shared memory created newly is of length '0' bytes
+    step2:
+        - define length of shared memory
+        - file descriptor obtained in previous step is referenced in mmap()
+        -  this maps the shared memory object into the process's virtual address space
+        NOTE: any read/write to process's virtual memory will be actually
+              read/written from shared memory (part of physical ram)
+
+
+# creating shared memory object
+    #include <fcntl.h>
+    #include <sys/stat.h>
+    #include <sys/mman.h>
+
+    int shm_open(const char *name, int oflag, mode_t mode);
+    => returns file descriptor on success or -1 on error
+
+
+    oflag can take below one or more ored(|) members
+    O_RDONLY: 
+    O_RDWR: 
+    O_TRUNC: to truncate shared memory to zero lengh
+    O_EXCL: if shared memory needs to be created newly, then O_EXCL is used
+
+    NOTE: the shm_open() is similiar to open()
+
+
+# to assign size to newly created shared memory
+    #include <unistd.h>
+    int ftruncate(int fd, off_t length);
+    // fd is descriptor obtained from shm_open() and length is the required length in bytes of shared memory
+
+
+## mapping shared memory to virtual memory
+#   mmap() us used to map the shared memory created to the proces virtual map.
+    #include <sys/mman.h>
+    void *mmap(void *addr, size_t length, int prot, int flags, int fd, off_t offset);
+    => addr: address of process virtual memory to which the shared memory is mapped, If 'addr' is NULL,
+             then the kernel chooses the address at which to create the mapping 
+    => length:  length of created shared memory
+    => prot: describes the memory protection of mapping(PROT_READ for read and PROT_WRITE for while)
+    => flags: for shared memory flags use value 'MAP_SHARED' describing that the memory can be shared, i.e; updates
+       to this mapped memory is visible among process
+    => fd: file descriptor obtained from shm_open()
+
+# mmap() returns:
+    - on success, the virtual memory of process to which the shared memory is mapped
+    - on error, the value MAP_FAILED (that is, (void *)-1) is returned, and errno is set to indicate the cause of the error
+    - man 2 mmap
