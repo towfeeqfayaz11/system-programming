@@ -1,0 +1,129 @@
+## posix - message queue
+# message queues can be used to pass messages between processes
+# unlike PIPE and FIFO which are 'byte' oriented IPC, message queue is 'message' oriented IPC
+# readers and writers communicate each other in units of messages
+# posix message queues permit each message to be assigned a priority
+# priority allows high-priority messages to be queued ahead of low-priority messages
+# message queue entry is present in file system in /dev/mqueue
+# NOTE: message queue is a persistent memory which finds its entry in the file system
+
+# system calls associated with message queue:
+  mq_open() :- creates or opens a message queue, returns mq descriptor (mqd_t) for use in later calls
+  mq_close()
+  mq_unlink() :- removes a message queue name and marks the queue for deletion when all processes have closed it
+  mq_send(), mq_receive()
+  mq_setatt(), mq_getattr()
+
+  mqd_t mq_open(const char *name, int oflag);
+  mqd_t mq_open(const char *name, int oflag, mode_t mode, struct mq_attr *attr);
+  // name should always start with '/' e.g; /my_queue
+  // returns -1 on error
+
+  oflag :- specify the different options in which the message queue can be opened
+        O_READONLY
+        O_WRONLY
+        O_RDWR
+
+        below one or more flags can be ored (|) with above ones
+        O_CREAT
+        O_EXCL
+        O_NONBLOCK
+
+# reffer man page for more details: man 3 mq_open
+
+# mode :- if O_CREAT is specified in 'oflag', then mode refers to the permission in which the message queue is created(read/write)
+# NOTE: oflag and mode used here are similar to parameters used in open() system call used for regular files 
+
+
+
+## attributes of message queue (struct mq_attr *attr)
+# struct mq_attr {
+    log mq_flags;
+    long mq_maxmsg;
+    long mq_msgsize;
+    long mq_curmsgs; // number of messages currently in queue
+}
+
+mq_maxmsg  :- maximum number of messages allowed in queue
+mq_msgsize :- maximum size of each message (in bytes)
+mq_curmsgs :- total number of messages currently in queue
+
+
+## send and receive data
+
+#include <mqueue.h>
+int mq_send(mqd_t mqdes, const char *msg_ptr, size_t msg_len, unsigned int msg_prio);
+=> returns 0 on success or -1 on error
+
+#include <mqueue.h>
+int mq_receive(mqd_t mqdes, char *msg_ptr, size_t msg_len, unsigned int msg_prio);
+=> returns number of bytes in received message on success, or -1 on error
+
+
+
+
+
+
+"""
+1. What Does 'Byte-Oriented' IPC Mean?
+PIPE and FIFO (named pipe) treat the data being transmitted as a continuous stream of bytes. Here's how this works:
+- When you write data to a PIPE or FIFO, it is written as a sequence of bytes, and the receiving process reads
+  it in the same manner.
+- There is no inherent structure to the data. The IPC mechanism does not understand or care about what the
+  data represents—it's just a flow of bytes.
+- The sender and receiver must have a shared understanding of the data's meaning (e.g., string, integers,
+  or custom formats).
+
+Example of Byte-Oriented Communication:
+    Imagine writing text to a PIPE:
+        - Process 1 writes: "Hello"
+        - Process 2 reads: "Hel" and then reads "lo"
+    Here, the data is a continuous stream of bytes. Process 2 has no idea whether "Hel" and "lo" are
+    related; it just reads bytes as they come.
+
+Challenges with Byte-Oriented IPC:
+- No message boundaries: The receiver needs to infer boundaries between meaningful chunks of data.
+- Parsing required: The receiver might need additional logic to reconstruct the "message"
+  (e.g., splitting data on a delimiter like \n).
+
+
+
+
+2. What Does 'Message-Oriented' IPC Mean?
+A message queue, on the other hand, treats the data as discrete, structured messages.
+Each message is a complete, self-contained unit with a defined boundary.
+- When you send data via a message queue, it is sent as a distinct message.
+- The receiver reads one complete message at a time, as a single unit, rather than dealing with a stream of bytes.
+- Each message may have additional metadata, like a priority or type.
+
+Example of Message-Oriented Communication:
+    Imagine sending messages through a queue:
+        - Process 1 sends the message: "Hello"
+        - Process 1 sends another message: "World"
+        - Process 2 reads the first message: "Hello"
+        - Process 2 reads the second message: "World"
+    The queue maintains message boundaries automatically. The receiver doesn't need to worry about where one 
+    message ends and another begins.
+
+
+
+
+What Does 'Continuous Stream of Bytes' Mean?
+  - When data is transmitted as a continuous stream of bytes, it means that the data flows from the sender 
+    to the receiver as an unstructured sequence of bytes (binary or text).
+
+  - This transmission method does not include any inherent boundaries or delimiters to separate chunks of
+    meaningful data. The receiver reads the data in the order it was sent, but it must interpret the meaning
+    and reconstruct the intended structure on its own.
+
+How Does a Byte Stream Work?
+Sender's Perspective:
+    - The sender writes data to a buffer or a communication medium (like a PIPE or FIFO).
+    - The data is treated as a sequence of raw bytes.
+    - The sender has no control over how the data is chunked or interpreted by the receiver.
+Receiver's Perspective:
+    - The receiver reads data from the communication medium.
+    - It might not receive the data in the exact format or chunks sent by the sender
+      because the kernel or the communication protocol decides the size of each "read."
+    - The receiver is responsible for reconstructing the intended structure if necessary.
+"""

@@ -1,0 +1,212 @@
+## summary of semaphores, mutexes, and condition variables
+1. Semaphore
+    What it does:- Controls access to a shared resource using a counter.
+    Key Point:- Allows multiple entities (processes or threads) to access resources if the counter permits
+                (e.g., a pool of printers).
+    Use it for: Synchronization between processes or threads, especially when you have limited resources to share.
+    Types:
+        - Unnamed Semaphore: Used for threads within the same process.
+        - Named Semaphore: Can be used across multiple processes.
+
+
+2. Mutex
+    What it does:- Ensures only one thread or process can access a critical section (e.g., shared data) at a time.
+    Key Point:- It's a binary lock (locked or unlocked).
+    
+    Use it for:
+        Threads: Commonly used for thread synchronization.
+        Processes: Can also synchronize processes, but less common than semaphores for this purpose.
+    Main Usage: Prevent race conditions when accessing shared memory.
+
+
+3. Condition Variable
+    What it does:- Allows threads to wait for a condition to be met and get signaled when the condition
+                   changes (e.g., "Wait until data is available").
+    Key Point:- Always works with a mutex to protect shared data.
+    Use it for:- Synchronization between threads. Rarely used for processes.
+    Main Usage:- When a thread needs to pause until another thread finishes a
+                 specific task or updates shared data.
+
+
+When to Use Which:
+For Processes:
+    Use semaphores (named semaphores are better suited for inter-process communication).
+For Threads:
+    Use mutex for exclusive locking.
+    Use condition variables when threads need to wait and signal each other.
+    Use semaphores if you need to manage a pool of resources shared among threads.
+
+
+Quick Comparison Table:
+Aspect              Semaphore                   Mutex                           ConditionVariable
+---------------------------------------------------------------------------------------------------
+Processes/Threads   Both                        Mostly Threads	                Threads Only
+Purpose	Resource    Pooling                     Exclusive Locking               Waiting & Signaling
+Counter/Lock	    Counter	                    Binary Lock                     Works with Mutex
+Use Case	        Managing resource pools	    Protecting critical sections	Wait-for-condition scenarios
+
+
+
+====================================================================================================
+====================================================================================================
+
+## posix-semaphores
+# posix semaphore allows processes and threads to synchronize access to shared resources
+# semaphores are used to execute the critical section (resource shared by different processes/threads) in an atomic manner
+# named semaphores:- this semaphore has a name as specified in sem_open()
+    => on linux present in /dev/shm
+    => Named semaphores are identified by a name (a string starting with a slash, e.g., /my_semaphore).
+    => They are persistent kernel objects, meaning they exist independently of the processes that use them.
+    => Named semaphores are created using the sem_open() function.
+    => The semaphore persists in the system until explicitly destroyed, even if the creating process terminates.
+    => They are ideal for inter-process communication (IPC), allowing unrelated processes to synchronize with each other.
+    => File Descriptor Requirement: Requires managing file descriptors, which may lead to exhaustion if not closed properly.
+    => Overhead: Slightly slower than unnamed semaphores because they involve kernel-managed resources.
+
+    example code for named semaphore
+
+        #include <semaphore.h>
+        #include <fcntl.h> // For O_CREAT, O_EXCL
+        #include <stdio.h>
+        #include <unistd.h>
+        #include <sys/types.h>
+
+        int main() {
+            sem_t* sem = sem_open("/my_semaphore", O_CREAT, 0644, 1); // Create a named semaphore
+            if (sem == SEM_FAILED) {
+                perror("sem_open failed");
+                return 1;
+            }
+
+            // Wait and decrement the semaphore
+            sem_wait(sem);
+            printf("Critical section\n");
+            sleep(2); // Simulate work
+            sem_post(sem); // Increment the semaphore
+            printf("Leaving critical section\n");
+
+            sem_close(sem);            // Close the semaphore
+            sem_unlink("/my_semaphore"); // Remove the named semaphore
+            return 0;
+        }
+
+
+
+# unnamed semaphores:- this type of semaphore doesn't have a name. it resides at a location in memory
+    => They are ephemeral: They disappear when the process that created them terminates
+    => Created using the sem_init() function, which initializes a semaphore in shared memory or
+        the calling process's address space.
+    => Best for thread-level synchronization or synchronization between processes with shared memory.
+    => Faster than named semaphores because they don’t require kernel-level management.
+    => Lightweight: No file descriptors or kernel objects are involved.
+    => Fast: Directly operate in user space, making them faster than named semaphores.
+    => Limited Scope: Only usable within the process or between processes that share memory.
+
+    example code for unnamed semaphore:
+        #include <semaphore.h>
+        #include <pthread.h>
+        #include <stdio.h>
+        #include <unistd.h>
+
+        sem_t sem; // Unnamed semaphore
+
+        void* thread_func(void* arg) {
+            sem_wait(&sem); // Decrement semaphore
+            printf("Thread %ld in critical section.\n", (long)arg);
+            sleep(1); // Simulate work
+            printf("Thread %ld leaving critical section.\n", (long)arg);
+            sem_post(&sem); // Increment semaphore
+            return NULL;
+        }
+
+        int main() {
+            pthread_t threads[3];
+            sem_init(&sem, 0, 1); // Initialize unnamed semaphore (0: thread-only, value: 1)
+
+            for (long i = 0; i < 3; i++) {
+                pthread_create(&threads[i], NULL, thread_func, (void*)i);
+            }
+            for (int i = 0; i < 3; i++) {
+                pthread_join(threads[i], NULL);
+            }
+
+            sem_destroy(&sem); // Destroy semaphore
+            return 0;
+        }
+
+===============================================
+
+## list of functions used by named semaphore
+# sem_open()
+# sem_post()
+# sem_wait()
+# sem_getvalue() :- retrieves a semaphores current value
+# sem_close() :- removes the calling process's association with a semaphore that it previously opened
+# sem_unlink() :- removes a semaphore identified by name and marks the semaphore for deletion when 
+                  all processes have stopped using it. returns 0 on success, -1 otherwise
+
+# open a named semaphore
+    #include <fcntl.h>      // for O_* constats
+    #include <sys/stat.h>   // for mode constants
+    #include <semaphore.h>
+
+    sem_t *sem_open(const char *name, int oflag);
+    sem_t *sem_open(const char *name, int oflag, mode_t mode, unsigned int valye);
+
+    => link the program with -lpthrad
+
+# sem_open()
+    => if O_CREAT is specified in oflag, then a new semaphore is created if one with the given name doesn't already exist
+    => if O_CREAT is specified in flags, the two further arguments are required: mode and value
+        - mode: similar as file open mode; O_RDONLY, O_WRONLY, O_RDWR
+        - value: 
+                 - is an unsigned intger that specifies inital value to be assigned to the new semaphore.
+                 - when a child is created via fork(), it inherits reference to all of the named semaphores that
+                   are open in its parent. After the fork(), the parent and child can use these semaphores to
+                   synchronize their actions
+    => NOTE: when a programmer is opening a existing semaphore, we need to take care of the oflag, as most of the times
+             to perform semaphore operations, both read and write permissions is required (usually semaphore
+             should be opened in read/write mode)
+
+
+
+
+
+# posix semaphore is an integer that the system never allows to go below 0
+# the sem_post() and sem_wait() functions increment and decrement a semaphore's value by exactly one
+
+# sem_wait(): if the semaphore currently has a value grater than 0, sem_wait() returns immediately. If the value
+              of the semaphore is currently 0, sem_wait() blocks until the semaphore value rises above 0, at that time,
+              the semaphore is decremented (by 1) and sem_wait() returns
+# sem_post(): increments (increases by 1) the value of the semaphore reffered to by 'sem'
+              #include <semaphore.h>
+              int sem_post(sem_t *sem);
+              returns 0 on success or -1 on error
+# sem_getvalue(): returns current value of semaphore referred by 'sem' in the int pointed to by 'sval'
+                  #include <semaphore.h>
+                  int sem_getvalue(sem_t *sem, int *sval);
+                  => returns 0 on success or -1 on error
+
+
+=======================================
+
+## unnamed semaphores
+# unnamed semaphores (also known as memory based sempahores) are variables of type sem_t that are
+  stored in memory allocated by the application
+# the semaphore is made available to the processes or threads that use it by placing it in an area of memory that they share
+# NOTE: named semaphore was present on file system similiar to a regular file, where as a un-named semaphore does not exist
+        on file system, rather on volatile memory like RAM ( this memory should be accessible to all the process/threads which
+        are relevat in this case). Ideally posix-SharedMemory is used to store unnamed semaphore
+
+# uses same functions as named semaphore, except is created using sem_init() and deleted using sem_destory(sem)
+
+# sem_init(sem_t *sem, int pshared, unsigned int value):
+             - initializes a semaphore and informs the system of whether the semaphore will be shared between processes
+               or between the threads of a single process
+             - returns 0 on success or -1 on error
+             - pshared argument indicates whether the semaphore is to be shared between thread or between processes.
+             - pshared=0           --> semaphore to be shared between threads of the calling process
+               pshared= <non zero> --> semaphore to be shared between processes
+# sem_destroy(): destroys a semaphore
+
+# NOTE: functions [sem_init(), sem_destory()] should not be used with named semaphores

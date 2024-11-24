@@ -17,7 +17,7 @@
    3) consition variable (used for threads)
 
 #NOTE: communication based IPC are used to transfer the data, while the
-       synchronisation based IPC are used to synchronise between process
+       synchronisation based IPC are used to synchronise between processes
 
 ======================================================================================
 ======================================================================================

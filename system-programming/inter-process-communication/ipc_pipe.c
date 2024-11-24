@@ -1,6 +1,7 @@
 /*
 - Pipes are used for unidirectional communication between related processes (e.g., parent and child).
 - pipe is created in memory
+- pipe is a byte stream based communication mechanism
 
 (What) is unidirectional pipe?
 - A unidirectional pipe is a simple Inter-Process Communication (IPC) mechanism used to pass

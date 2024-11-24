@@ -1,0 +1,35 @@
+## pipes in linux
+# pipe is a byte stream used for IPC
+# has two ends (read-end and write-end)
+# pipes have limited capacity(usually 64kb). A pipe is simply a buffer maintained in kernel memory
+# when a pipe is full, further writes to pipe will be blocked, until receiver end process removes the data from pipe
+# writing from pipe puts the data while reading from pipe removes the data from pipe
+
+# pipe creation
+    #include <unistd.h>
+    int pipe(int fd[2]);
+    => pipe() opens two file descriptors, one in fd[0] and other in fd[1]
+    => returns 0 on success or -1 on error
+
+# SIGPIPE signal in pipes
+  => SIGPIPE signal(broken pipe signal) is sent to write end process when read end is closed
+
+
+====================================
+## FIFO (first in first out)
+# FIFO is similiar to pipe
+# it is also called named pipes
+# the principal difference between PIPES and FIFO;
+  1) FIFO has a name within the file system and is opened in the same way as a regular file, where as PIPES
+     does not have a name in file system
+  2) FIFO is used for communication between 'unrelated processes' (e.g; client and server), but
+     PIPES are used to send data only between related processes (e.g; parent-child process)
+# one a FIFO has been opened, we use the same I/O system calls as are used with pipes and other files (i.e; read(), write()
+  and close())
+# just as with pipes, a FIFO has a write end and a read end, and data read from the FIFO in the same order as it is
+  written (means the first data written to write end of fifo, is the first read out from reading end of fifo)
+
+# create a fifo
+  #include <sys/stat.h>
+  int mkfifo(const char *pathname. mode_t mode);
+  => return 0 on success or -1 on error
