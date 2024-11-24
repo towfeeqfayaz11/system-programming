@@ -1,0 +1,239 @@
+## inter process communication(IPC)
+# IPC are used to send/receive data between processes
+# IPC are also used to synchronise between processes
+# IPC usually has two types;
+  - communication based
+  - synchronisation based
+
+## communication based IPC are also of two types;
+   1) data transfer based
+      e.g; PIPE, FIFO, message queue and socket
+   2) memory sharing based
+      e.g; shared memory
+
+## synchronisation based IPC types;
+   1) semaphore
+   2) mutex (used for threads)
+   3) consition variable (used for threads)
+
+#NOTE: communication based IPC are used to transfer the data, while the
+       synchronisation based IPC are used to synchronise between process
+
+======================================================================================
+======================================================================================
+
+1. Communication Between Processes
+    1.1 Anonymous Pipe (Unidirectional)
+        An anonymous pipe is a simple IPC mechanism used to communicate between related processes (e.g., parent-child).
+
+        Code Example:
+        #include <stdio.h>
+        #include <unistd.h>
+        #include <string.h>
+
+        int main() {
+            int pipefd[2];
+            char write_msg[] = "Hello from parent!";
+            char read_msg[100];
+            
+            // Create a pipe
+            pipe(pipefd);
+            
+            pid_t pid = fork();
+            
+            if (pid == 0) {  // Child process
+                close(pipefd[1]);  // Close write end
+                read(pipefd[0], read_msg, sizeof(read_msg));
+                printf("Child received: %s\n", read_msg);
+                close(pipefd[0]);
+            } else {  // Parent process
+                close(pipefd[0]);  // Close read end
+                write(pipefd[1], write_msg, strlen(write_msg) + 1);  // Write to pipe
+                close(pipefd[1]);  // Close write end after writing
+            }
+            
+            return 0;
+        }
+
+        Explanation:
+            A pipe (pipefd[2]) is created using pipe().
+            The parent process writes data into the pipe, and the child reads from it.
+            pipefd[0] is used for reading and pipefd[1] for writing.
+
+
+    1.2 Named Pipe (FIFO)
+        A named pipe, or FIFO (First In, First Out), allows communication between unrelated processes. It is a special file in the filesystem.
+
+        Code Example:
+        #include <stdio.h>
+        #include <unistd.h>
+        #include <fcntl.h>
+        #include <string.h>
+
+        int main() {
+            const char *fifo_path = "/tmp/my_fifo";
+            char write_msg[] = "Hello from parent via FIFO!";
+            char read_msg[100];
+            
+            // Create a named pipe (FIFO)
+            mkfifo(fifo_path, 0666);
+            
+            pid_t pid = fork();
+            
+            if (pid == 0) {  // Child process
+                int fd = open(fifo_path, O_RDONLY);
+                read(fd, read_msg, sizeof(read_msg));
+                printf("Child received: %s\n", read_msg);
+                close(fd);
+            } else {  // Parent process
+                int fd = open(fifo_path, O_WRONLY);
+                write(fd, write_msg, strlen(write_msg) + 1);  // Write to FIFO
+                close(fd);
+            }
+            
+            return 0;
+        }
+
+        Explanation:
+            mkfifo() creates the named pipe.
+            The parent process writes data, and the child reads it from the FIFO.
+            2. Synchronization Between Processes
+            Processes may need synchronization mechanisms to avoid race conditions, especially when accessing shared resources.
+
+2. Synchronization Between Processes
+    2.1 Semaphore (Inter-process Synchronization)
+        A semaphore is used to control access to shared resources between multiple processes.
+
+        Code Example:
+        #include <stdio.h>
+        #include <semaphore.h>
+        #include <pthread.h>
+        #include <fcntl.h>
+        #include <unistd.h>
+
+        sem_t *sem;
+
+        void *process1(void *arg) {
+            sem_wait(sem);  // Wait for semaphore (decrement)
+            printf("Process 1 has acquired the semaphore.\n");
+            sleep(2);  // Simulate processing
+            printf("Process 1 is releasing the semaphore.\n");
+            sem_post(sem);  // Signal the semaphore (increment)
+            return NULL;
+        }
+
+        void *process2(void *arg) {
+            sem_wait(sem);  // Wait for semaphore
+            printf("Process 2 has acquired the semaphore.\n");
+            sleep(2);  // Simulate processing
+            printf("Process 2 is releasing the semaphore.\n");
+            sem_post(sem);  // Signal the semaphore
+            return NULL;
+        }
+
+        int main() {
+            sem = sem_open("/mysem", O_CREAT, 0666, 1);  // Create a semaphore
+            
+            pthread_t p1, p2;
+            pthread_create(&p1, NULL, process1, NULL);
+            pthread_create(&p2, NULL, process2, NULL);
+            
+            pthread_join(p1, NULL);
+            pthread_join(p2, NULL);
+            
+            sem_close(sem);
+            sem_unlink("/mysem");  // Remove the semaphore from system
+            return 0;
+        }
+
+        Explanation:
+            sem_open() creates a semaphore to control access to shared resources.
+            sem_wait() locks the semaphore and sem_post() unlocks it.
+            Two processes use the semaphore to avoid accessing shared resources concurrently.
+
+
+
+3. Communication Between Threads
+Threads within a process can communicate through shared memory or other mechanisms like condition variables or message queues.
+
+    3.1 Shared Memory (Thread Communication)
+    Threads share the same memory space. Shared variables can be used for communication.
+
+        Code Example:
+        #include <stdio.h>
+        #include <pthread.h>
+
+        int shared_data = 0;
+
+        void *thread1_func(void *arg) {
+            shared_data = 42;  // Modify shared data
+            printf("Thread 1: Shared data set to %d\n", shared_data);
+            return NULL;
+        }
+
+        void *thread2_func(void *arg) {
+            printf("Thread 2: Shared data is %d\n", shared_data);  // Read shared data
+            return NULL;
+        }
+
+        int main() {
+            pthread_t t1, t2;
+            
+            pthread_create(&t1, NULL, thread1_func, NULL);
+            pthread_create(&t2, NULL, thread2_func, NULL);
+            
+            pthread_join(t1, NULL);
+            pthread_join(t2, NULL);
+            
+            return 0;
+        }
+        Explanation:
+            Both threads access and modify the same shared memory (shared_data).
+            This type of communication works well as long as proper synchronization mechanisms (like mutexes) are used to avoid race conditions.
+    
+4. Synchronization Between Threads
+    Threads often need synchronization to ensure that shared resources are not accessed concurrently.
+
+    4.1 Mutex (Thread Synchronization)
+    A mutex (short for mutual exclusion) is a synchronization primitive used to prevent multiple threads from accessing a critical section at the same time.
+
+        Code Example:
+        #include <stdio.h>
+        #include <pthread.h>
+
+        pthread_mutex_t lock;
+
+        void *thread1_func(void *arg) {
+            pthread_mutex_lock(&lock);  // Lock the mutex
+            printf("Thread 1: Accessing shared resource\n");
+            sleep(2);  // Simulate some work
+            printf("Thread 1: Finished\n");
+            pthread_mutex_unlock(&lock);  // Unlock the mutex
+            return NULL;
+        }
+
+        void *thread2_func(void *arg) {
+            pthread_mutex_lock(&lock);  // Lock the mutex
+            printf("Thread 2: Accessing shared resource\n");
+            sleep(2);  // Simulate some work
+            printf("Thread 2: Finished\n");
+            pthread_mutex_unlock(&lock);  // Unlock the mutex
+            return NULL;
+        }
+
+        int main() {
+            pthread_mutex_init(&lock, NULL);  // Initialize mutex
+
+            pthread_t t1, t2;
+            pthread_create(&t1, NULL, thread1_func, NULL);
+            pthread_create(&t2, NULL, thread2_func, NULL);
+
+            pthread_join(t1, NULL);
+            pthread_join(t2, NULL);
+
+            pthread_mutex_destroy(&lock);  // Destroy mutex
+            return 0;
+        }
+        Explanation:
+            pthread_mutex_lock() locks the mutex, and pthread_mutex_unlock() unlocks it.
+            This ensures that only one thread at a time can access the critical section where the shared resource is used.
